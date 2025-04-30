@@ -7,7 +7,6 @@ library(dplyr)
 library(DescTools)
 library(gt)
 library(ggplot2)
-library(ineq)
 
 # Load your saved Part A dataset
 hbasicinc_base <- readRDS("hbasicinc_tax.rds")

@@ -6,7 +6,6 @@
 library(dplyr)
 library(DescTools)
 library(ggplot2)
-library(ineq)
 
 # Load original Part A dataset
 hbasicinc_base <- readRDS("hbasicinc_tax.rds")
@@ -135,6 +134,8 @@ group_summary_basic <- group_summary_basic %>%
   mutate(
     welfare_share = total_welfare / total_welfare_basic * 100
   )
+
+
 
 # View the group summary
 print(group_summary_basic)

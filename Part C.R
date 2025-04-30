@@ -6,7 +6,6 @@
 library(dplyr)
 library(DescTools)
 library(ggplot2)
-library(ineq)
 
 # Load original Part A dataset
 hbasicinc_base <- readRDS("hbasicinc_tax.rds")
@@ -15,7 +14,7 @@ hbasicinc_base <- readRDS("hbasicinc_tax.rds")
 # Step 1. Update Tax Calculation (Top Bracket to 45%)
 # -------------------------------
 
-# Adjust taxable income as already defined
+# Adjust taxable income 
 hbasicinc_base <- hbasicinc_base %>%
   mutate(
     income_tax_prog = case_when(
