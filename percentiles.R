@@ -1,7 +1,9 @@
 # Load libraries
 library(dplyr)
-library(ineq)
+library(DescTools)
 library(writexl)
+library(ggplot2)
+
 
 # Load your processed data
 hbasicinc_base <- readRDS("hbasicinc_tax.rds")
@@ -68,8 +70,6 @@ print(group_summary)
 cat("\nOverall Mean Welfare:", round(overall_mean_welfare, 2))
 cat("\nGini Coefficient (Welfare):", round(gini_welfare, 4))
 
-library(ggplot2)
-library(ineq)
 
 # Lorenz curve points
 lorenz <- Lc(hbasicinc_base$welfare, weights = hbasicinc_base$final_weight)
@@ -116,13 +116,10 @@ group_summary %>%
     decimals = 0,
     use_seps = TRUE
   ) %>%
-  fmt_percent(
+  fmt_number(
     columns = welfare_share,
     decimals = 1
   )
 
 
 
-
-# 7. (Optional) Export Group Summary to Excel
-#write_xlsx(group_summary, "percentile_summary.xlsx")

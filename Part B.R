@@ -88,7 +88,37 @@ cat("\nOverall Mean Welfare (Pre-2017 Tax):", round(overall_mean_welfare_pre2017
 cat("\nGini Coefficient (Pre-2017 Tax):", round(gini_pre2017, 4))
 
 # -------------------------------
-# Step 5. Plot Lorenz Curve Pre-2017
+# Step 5. Generate Table
+# -------------------------------
+group_summary_pre2017 %>%
+  mutate(
+    mean_welfare = round(mean_welfare, 2),
+    welfare_share = total_welfare / sum(total_welfare)  # convert to proportion
+  ) %>%
+  gt() %>%
+  tab_header(
+    title = "Welfare Distribution by Income Group (Pre-Trump Tax System)",
+    subtitle = "Based on 2017 Tax Brackets + EITC"
+  ) %>%
+  cols_label(
+    group_pre2017 = "Income Group",
+    mean_welfare = "Mean Welfare ($)",
+    total_welfare = "Total Welfare",
+    population = "Population (Weighted)",
+    welfare_share = "Share of Total Welfare (%)"
+  ) %>%
+  fmt_number(
+    columns = c(mean_welfare, total_welfare, population),
+    decimals = 0,
+    use_seps = TRUE
+  ) %>%
+  fmt_percent(
+    columns = welfare_share,
+    decimals = 1
+  )
+
+# -------------------------------
+# Step 6. Plot Lorenz Curve Pre-2017
 # -------------------------------
 
 # Lorenz Curve
@@ -110,30 +140,11 @@ ggplot(lorenz_df_pre2017, aes(x = p, y = L)) +
   ) +
   theme_minimal(base_size = 14)
 
-# -------------------------------
-# Step 6. Save if Needed
-# -------------------------------
-
-# Optionally save tables
-library(writexl)
-write_xlsx(group_summary_pre2017, "group_summary_pre2017.xlsx")
-
-# Optionally save Lorenz Curve
-# ggsave("lorenz_pre2017.png")
-
-# -------------------------------
-# Done!
-# -------------------------------
 
 
 # -------------------------------
 # Combined Lorenz Curve Plot
 # -------------------------------
-
-# First, make sure you have both Lorenz curve objects:
-# lorenz_post = Part A Lorenz (Post-Trump)
-# lorenz_pre = Part B Lorenz (Pre-Trump)
-
 
 # Create combined data frame
 lorenz_combined <- data.frame(

@@ -6,6 +6,8 @@
 library(dplyr)
 library(DescTools)
 library(ggplot2)
+library(gt)
+
 
 # Load original Part A dataset
 hbasicinc_base <- readRDS("hbasicinc_tax.rds")
@@ -80,15 +82,20 @@ cat("\nGini Coefficient (Basic Income System):", round(gini_basic, 4))
 # Step 5. Lorenz Curve Plot
 # -------------------------------
 
-lorenz_basic <- Lc(hbasicinc_base$welfare_basic, weights = hbasicinc_base$final_weight)
+# Store welfare for B = 5500
+hbasicinc_base <- hbasicinc_base %>%
+  mutate(welfare_5500 = welfare_basic)
 
-lorenz_df_basic <- data.frame(
-  p = lorenz_basic$p,
-  L = lorenz_basic$L
+lorenz_5500 <- Lc(hbasicinc_base$welfare_5500, weights = hbasicinc_base$final_weight)
+
+df_5500 <- data.frame(
+  p = lorenz_5500$p,
+  L = lorenz_5500$L,
+  system = "B = 5,500"
 )
 
 ggplot(lorenz_df_basic, aes(x = p, y = L)) +
-  geom_line(color = "purple", size = 1.2) +
+  geom_line(color = "orange", size = 1.2) +
   geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "gray50") +
   labs(
     title = "Lorenz Curve of Welfare Distribution (Basic Income + Flat Tax System)",
@@ -118,6 +125,7 @@ hbasicinc_base <- hbasicinc_base %>%
     )
   )
 
+
 group_summary_basic <- hbasicinc_base %>%
   group_by(group_basic) %>%
   summarise(
@@ -127,7 +135,6 @@ group_summary_basic <- hbasicinc_base %>%
     .groups = "drop"
   )
 
-# Calculate welfare share
 total_welfare_basic <- sum(group_summary_basic$total_welfare)
 
 group_summary_basic <- group_summary_basic %>%
@@ -135,11 +142,28 @@ group_summary_basic <- group_summary_basic %>%
     welfare_share = total_welfare / total_welfare_basic * 100
   )
 
+group_summary_basic %>%
+  gt() %>%
+  fmt_number(
+    columns = c(mean_welfare, total_welfare, population),
+    decimals = 2,
+    use_seps = TRUE
+  ) %>%
+  fmt_percent(
+    columns = welfare_share,
+    decimals = 1,
+    scale_values = FALSE
+  ) %>%
+  cols_label(
+    group_basic = "Group",
+    mean_welfare = "Mean Welfare",
+    total_welfare = "Total Welfare",
+    population = "Population",
+    welfare_share = "Welfare Share (%)"
+  ) %>%
+  tab_header(
+    title = "Welfare Distribution Summary by Group",
+    subtitle = "t = 24.5% | T= 30% | L = $220,000 | B = $10,000"
+    
+  )
 
-
-# View the group summary
-print(group_summary_basic)
-
-# (Optional) Save summary
-# library(writexl)
-# write_xlsx(group_summary_basic, "group_summary_basic_income.xlsx")

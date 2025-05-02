@@ -35,24 +35,34 @@ hbasicinc_base <- hbasicinc_base %>%
 # Step 2. Expand EITC Ceilings
 # -------------------------------
 
-# EITC expansion multiplier
-eitc_multiplier <- 1.3
+eitc_multiplier <- 1.2
 
-# Redefine EITC based on expanded ceilings
 hbasicinc_base <- hbasicinc_base %>%
   mutate(
     inc_eit = ifelse(hprimaryval > 0, hprimaryval, 0),
-    eitc_prog = 0,
     
-    # EITC with expanded ceilings
+    # Scaled max credits
+    max_eitc_0 = 519 * eitc_multiplier,
+    max_eitc_1 = 3481 * eitc_multiplier,
+    max_eitc_2 = 5716 * eitc_multiplier,
+    max_eitc_3 = 6431 * eitc_multiplier,
+    
+    # Scaled phase-in rates
+    rate_0 = 0.0765 * eitc_multiplier,
+    rate_1 = 0.34 * eitc_multiplier,
+    rate_2 = 0.40 * eitc_multiplier,
+    rate_3 = 0.45 * eitc_multiplier,
+    
+    # Compute progressive EITC
     eitc_prog = case_when(
-      inc_eit <= (6780 * eitc_multiplier) & hunder18 == 0 ~ pmin(519, 0.0765 * inc_eit),
-      inc_eit <= (10680 * eitc_multiplier) & hunder18 == 1 ~ pmin(3481, 0.34 * inc_eit),
-      inc_eit <= (14290 * eitc_multiplier) & hunder18 == 2 ~ pmin(5716, 0.40 * inc_eit),
-      inc_eit <= (14290 * eitc_multiplier) & hunder18 >= 3 ~ pmin(6431, 0.45 * inc_eit),
+      hunder18 == 0 & inc_eit <= (6780 * eitc_multiplier) ~ pmin(max_eitc_0, rate_0 * inc_eit),
+      hunder18 == 1 & inc_eit <= (10680 * eitc_multiplier) ~ pmin(max_eitc_1, rate_1 * inc_eit),
+      hunder18 == 2 & inc_eit <= (14290 * eitc_multiplier) ~ pmin(max_eitc_2, rate_2 * inc_eit),
+      hunder18 >= 3 & inc_eit <= (14290 * eitc_multiplier) ~ pmin(max_eitc_3, rate_3 * inc_eit),
       TRUE ~ 0
     )
   )
+
 
 # -------------------------------
 # Step 3. Calculate New Welfare
@@ -124,40 +134,32 @@ ggplot(lorenz_df_prog, aes(x = p, y = L)) +
 # -------------------------------
 # Step 7. Group Summary Table 
 # -------------------------------
+library(gt)
 
-group_summary_prog <- hbasicinc_base %>%
-  group_by(group_prog) %>%
-  summarise(
-    mean_welfare = weighted.mean(welfare_prog, final_weight),
-    total_welfare = sum(welfare_prog * final_weight),
-    population = sum(final_weight),
-    .groups = "drop"
-  )
-
-# Calculate share of total welfare
-total_welfare_prog <- sum(group_summary_prog$total_welfare)
-
-group_summary_prog <- group_summary_prog %>%
+group_summary_prog %>%
   mutate(
-    welfare_share = total_welfare / total_welfare_prog * 100
+    mean_welfare = round(mean_welfare, 2),
+    welfare_share = welfare_share / 100  # Convert to proportion
+  ) %>%
+  gt() %>%
+  tab_header(
+    title = "Welfare Distribution by Income Group (Progressive Reform)",
+    subtitle = "Top Bracket: 45% | Expanded EITC (x1.2 ceilings)"
+  ) %>%
+  cols_label(
+    group_prog = "Income Group",
+    mean_welfare = "Mean Welfare ($)",
+    total_welfare = "Total Welfare",
+    population = "Population (Weighted)",
+    welfare_share = "Share of Total Welfare (%)"
+  ) %>%
+  fmt_number(
+    columns = c(mean_welfare, total_welfare, population),
+    decimals = 0,
+    use_seps = TRUE
+  ) %>%
+  fmt_percent(
+    columns = welfare_share,
+    decimals = 1
   )
 
-# View the table
-print(group_summary_prog)
-
-# (Optional) Save to Excel
-# library(writexl)
-# write_xlsx(group_summary_prog, "group_summary_progressive.xlsx")
-
-
-# -------------------------------
-# (Optional) Save to Excel or Image
-# -------------------------------
-
-# library(writexl)
-# write_xlsx(hbasicinc_base, "progressive_reform_summary.xlsx")
-# ggsave("lorenz_curve_progressive_reform.png")
-
-# -------------------------------
-# Done!
-# -------------------------------
