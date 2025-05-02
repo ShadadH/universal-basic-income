@@ -17,16 +17,16 @@ hbasicinc_base <- readRDS("hbasicinc_tax.rds")
 # -------------------------------
 
 # Flat tax rate (t)
-flat_tax_rate <- 0.20
+flat_tax_rate <- 0.245
 
 # Super-tax rate (T)
-super_tax_rate <- 0.20
+super_tax_rate <- 0.30
 
 # Super-tax threshold per consumption unit (L)
-super_tax_threshold <- 200000
+super_tax_threshold <- 220000
 
 # Initial guess for Basic Income (B)
-basic_income_B <- 5500
+basic_income_B <- 10000
 
 # -------------------------------
 # Step 2. Calculate Components
@@ -82,16 +82,11 @@ cat("\nGini Coefficient (Basic Income System):", round(gini_basic, 4))
 # Step 5. Lorenz Curve Plot
 # -------------------------------
 
-# Store welfare for B = 5500
-hbasicinc_base <- hbasicinc_base %>%
-  mutate(welfare_5500 = welfare_basic)
+lorenz_basic <- Lc(hbasicinc_base$welfare_basic, weights = hbasicinc_base$final_weight)
 
-lorenz_5500 <- Lc(hbasicinc_base$welfare_5500, weights = hbasicinc_base$final_weight)
-
-df_5500 <- data.frame(
-  p = lorenz_5500$p,
-  L = lorenz_5500$L,
-  system = "B = 5,500"
+lorenz_df_basic <- data.frame(
+  p = lorenz_basic$p,
+  L = lorenz_basic$L
 )
 
 ggplot(lorenz_df_basic, aes(x = p, y = L)) +

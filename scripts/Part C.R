@@ -136,6 +136,23 @@ ggplot(lorenz_df_prog, aes(x = p, y = L)) +
 # -------------------------------
 library(gt)
 
+group_summary_prog <- hbasicinc_base %>%
+  group_by(group_prog) %>%
+  summarise(
+    mean_welfare = weighted.mean(welfare_prog, final_weight),
+    total_welfare = sum(welfare_prog * final_weight),
+    population = sum(final_weight),
+    .groups = "drop"
+  )
+
+# Calculate share of total welfare
+total_welfare_prog <- sum(group_summary_prog$total_welfare)
+
+group_summary_prog <- group_summary_prog %>%
+  mutate(
+    welfare_share = total_welfare / total_welfare_prog * 100
+  )
+
 group_summary_prog %>%
   mutate(
     mean_welfare = round(mean_welfare, 2),
